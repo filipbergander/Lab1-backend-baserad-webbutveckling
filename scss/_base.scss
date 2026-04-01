@@ -1,12 +1,13 @@
 body {
     background-color: rgba(231, 230, 231, 0.443);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
     box-sizing: border-box;
-    padding: 0;
+    min-height: 100vh;
 }
 
-html {
+html,
+body {
+    height: 100%;
     margin: 0;
     padding: 0;
 }
@@ -21,6 +22,7 @@ main {
     padding: 5em;
     border: 2px solid rgba(121, 114, 114, 0.468);
     border-radius: 30%;
+    flex: 1;
 }
 
 header {
@@ -55,6 +57,17 @@ nav {
             background-color: rgb(0, 157, 255, 0.8);
         }
     }
+}
+
+footer {
+    margin: 0 auto;
+    text-align: center;
+    width: 100%;
+    margin-top: 1em;
+    height: 60px;
+    font-family: monospace, sans-serif;
+    color: rgb(77, 76, 76);
+    letter-spacing: 0px;
 }
 
 .current-page {

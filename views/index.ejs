@@ -22,20 +22,15 @@
         <h1>Kurser</h1>
         <table class="table">
             <tr>
-                <th class="course-id">KursID</th>
                 <th>Kurskod</th>
                 <th>Kursnamn</th>
-                <th>Nivå</th>
+                <th>Progression</th>
                 <th>Kursplan</th>
-                <th>Skapad</th>
                 <th></th>
             </tr>
             <tbody id="table-body">
-                <% courses.forEach(row=> { %>
+                <% courses.forEach(row => { %>
                     <tr>
-                        <td class="row-id">
-                            <%= row.id %>
-                        </td>
                         <td class="row-code">
                             <%= row.code %>
                         </td>
@@ -53,10 +48,10 @@
                                 </svg>
                             </a>
                         </td>
-                        <td class="row-posted">
+                        <!--<td class="row-posted">
                             <%= new Date(row.posted + "Z" ).toLocaleString("sv-SE", {dateStyle: "short"}) %><br>
                                 <%= new Date(row.posted + "Z" ).toLocaleString("sv-SE", {timeStyle: "short"}) %>
-                        </td>
+                        </td>-->
                         <td class="row-delete">
                             <a href="/delete/<%=row.id%>" class="delete-btn"><svg xmlns="http://www.w3.org/2000/svg"
                                     height="24px" viewBox="0 -960 960 960" width="24px" fill="#ff0000">
@@ -69,6 +64,7 @@
             </tbody>
         </table>
     </main>
+    <footer> Av Filip Bergander 2026 | Laboration 1, Backend-baserad Webbutveckling</footer>
 </body>
 
 </html>

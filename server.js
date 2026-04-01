@@ -1,34 +1,48 @@
+const { Client } = require("pg");
 require("dotenv").config(); // För att hämta in env-filen
-
 const express = require('express'); // Express-verktyget
-const bodyParser = require('body-parser'); // För att läsa in data från forumulär 
-const sqlite3 = require("sqlite3").verbose(); // SQlite3 
-
-const db = new sqlite3.Database(process.env.DB_PATH); // Ansluter till databasen
-
 const app = express();
-const port = process.env.PORT || 3000; // Porten som servern ska köra på, hämtas från env-filen eller port 3000.
+const bodyParser = require('body-parser'); // För att läsa in data från forumulär 
 
 app.use(express.static("public")); // public mappen
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs"); // views mappen
 
-// Routes
-app.get("/", (req, res) => {
-    db.all("SELECT * FROM course;", (err, rows) => {
-        if (err) {
-            console.error(err);
-        }
-        res.render("index", { courses: rows });
-        console.log(rows);
-    });
+const client = new Client({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+    /*ssl: {
+        rejectUnauthorized: false
+    }*/
 });
 
-app.get("/about", (req, res) => {
+client.connect((error) => {
+    if (error) {
+        console.log("Fel vid anslutning till databasen:", error);
+        return;
+    } else {
+        console.log("Anslutningen till databasen lyckades!");
+    }
+});
+
+// Routes
+app.get("/", async(req, res) => {
+    try {
+        const result = await client.query("SELECT * FROM course ORDER BY id DESC;");
+        res.render("index", { courses: result.rows });
+    } catch (error) {
+        console.error("Fel vid inhämtning av tabell course:", error);
+    }
+});
+
+app.get("/about", async(req, res) => {
     res.render("about");
 });
 // Skickar med värden som är tomma för att inte få felmeddelanden i början av programmet innan nya kurser lagts till
-app.get("/newcourse", (req, res) => {
+app.get("/newcourse", async(req, res) => {
     res.render("newcourse", {
         errMessage: [],
         coursecode: "",
@@ -38,7 +52,7 @@ app.get("/newcourse", (req, res) => {
     });
 });
 // För att lägga till en ny kurs
-app.post("/", (req, res) => {
+app.post("/", async(req, res) => {
     // Läser in data från formuläret
     let courseid = req.body.id;
     let coursecode = req.body.code;
@@ -49,7 +63,6 @@ app.post("/", (req, res) => {
 
     // Array för felmeddelanden
     let errMessage = [];
-    console.log(errMessage);
 
     // Felmeddelande för respektive inputfält
     if (coursecode === "") {
@@ -82,28 +95,48 @@ app.post("/", (req, res) => {
         });
         // Annars om inga fel finns körs sql-frågan och kursen läggs till, index-sidan renderas då om allt går igenom.
     } else if (errMessage.length === 0) {
-        const statement = db.prepare(`INSERT INTO course (code, name, progression, syllabus) VALUES (?, ?, ?, ?);`);
-        statement.run(coursecode, coursename, progression, syllabus); // Stoppar in värdena i frågan
-        statement.finalize();
-
-        res.redirect("/"); // Startsidan
+        try { // Sätter in värdena i databasen
+            const result = await client.query(
+                "INSERT INTO course (code, name, progression, syllabus) VALUES ($1, $2, $3, $4)", [coursecode, coursename, progression, syllabus]
+            );
+            console.log("Kursen lades till i databasen!");
+            res.redirect("/"); // Returnerar startsidan
+        } catch (error) {
+            console.log(error.message);
+        }
     }
 });
 
 // För att radera en kurs
-app.get("/delete/:id", (req, res) => {
+app.get("/delete/:id", async(req, res) => {
+    try {
+        let id = req.params.id;
+        await client.query("DELETE FROM course WHERE id=$1", [id]);
+        res.redirect("/");
+        console.log("Kursen raderades från databasen!");
+    } catch (error) {
+        console.error("Fel vid radering av kurs:", error);
+    }
+});
+// För att uppdatera en kurs
+/*
+app.get("/update/:id", async (req, res) => {
     let id = req.params.id;
-    db.run("DELETE FROM course WHERE id=?;", id, (error) => {
+    let coursecode = req.body.code;
+    let coursename = req.body.name;
+    let progression = req.body.progression.toUpperCase();
+    let syllabus = req.body.syllabus;
+    db.run("UPDATE course WHERE id=?;", id, (error) => {
         if (error) {
             console.log(error.message);
         }
-        res.redirect("/");
+        res.redirect("/newcourse");
     });
-});
+});*/
 
 
-// Starta server
-app.listen(port, () => {
-    console.log("Servern kör på port: " + port);
-    console.log("http://localhost:" + port);
+// Starta applikationen
+app.listen(process.env.PORT, () => {
+    console.log("Servern kör på port: " + process.env.PORT);
+    console.log("http://localhost:" + process.env.PORT);
 });
