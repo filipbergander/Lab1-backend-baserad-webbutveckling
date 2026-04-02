@@ -102,7 +102,18 @@ app.post("/", async(req, res) => {
             console.log("Kursen lades till i databasen!");
             res.redirect("/"); // Returnerar startsidan
         } catch (error) {
-            console.log(error.message);
+            if (error.code === "23505") { // Kurskoden är unik, ett felmeddelande visas i DOM om man försöker lägga till en ny kurs med samma kod
+                errMessage.push("Kurskoden finns redan!");
+                console.log(error);
+                res.render("newcourse", {
+                    errMessage,
+                    coursecode,
+                    coursename,
+                    progression,
+                    syllabus
+                });
+                console.log(error.message);
+            }
         }
     }
 });

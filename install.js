@@ -29,11 +29,11 @@ async function createTable() {
         await client.query(`
             DROP TABLE IF EXISTS course;`);
 
-        // Skapar tabellen course
+        // Skapar tabellen course med PK, och attribut
         await client.query(`
         CREATE TABLE IF NOT EXISTS course (
             id SERIAL PRIMARY KEY,
-            code VARCHAR(255) NOT NULL,
+            code VARCHAR(255) NOT NULL UNIQUE,
             name VARCHAR(255) NOT NULL,
             progression VARCHAR(255) NOT NULL,
             syllabus TEXT NOT NULL,
